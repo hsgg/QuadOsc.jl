@@ -8,54 +8,69 @@ using QuadGK
 
 
 @doc raw"""
-    quadosc()
+    quadosc(fn, a, Inf, fnzeros; ...)
+
+Integrate the function `fn(x)` from `a` to `Inf`. The function `fnzeros(n)`
+takes an integer `n` and is such that `fn(fnzeros(n)) == 0`. The algorithm
+works by integrating between successive zeros, and accelerating the alternating
+series.
+
+The argument `pren` is the number of intervals to integrate before applying the
+series acceleration.
+
+`atol` and `rtol` specify the absolute and relative tolerances for determining
+convergence.
+
+`order` is passed on to `quadgk()` of the
+[QuadGK](https://github.com/JuliaMath/QuadGK.jl) package.
+
+`nconvergences` is the number of iterations before convergence is declared.
+
+See `?QuadOsc.accel_cohen_villegas_zagier` for details on the series
+acceleration.
 """
-function quadosc(f::Function, a::Number, b::Number, zeros::Function; pren=2,
+function quadosc(f::Function, a::Number, b::Number, zerosf::Function; pren=2,
 		 atol=zero(Float64), rtol=sqrt(eps(Float64)), order=7,
-		 nconvergences=ceil(Int,-1.31*log10(rtol))-pren)
+		 nconvergences=ceil(Int,-1.31*log10(rtol)))
     @assert b == Inf
     T = Float64
 
-    i1 = findfirst(n -> zeros(n) - a >= 0, 1:typemax(Int))
-    presum, Err = quadgk(f, a, zeros(i1); atol=atol, rtol=rtol, order=order)
+    i1 = findfirst(n -> zerosf(n) - a >= 0, 1:typemax(Int))
+    z1 = zerosf(i1)
+    Ipre, Epre = quadgk(f, a, z1; atol=atol, rtol=rtol, order=order)
 
-    i1max = i1 + pren
-    while i1 < i1max
-        I, E = quadgk(f, zeros(i1), zeros(i1+1); atol=atol,
-                      rtol=rtol, order=order)
-        presum += I
-        Err += E
+    z0 = z1
+    for i=1:pren
         i1 += 1
+        z1 = zerosf(i1)
+        I, E = quadgk(f, z0, z1; atol=atol, rtol=rtol, order=order)
+        Ipre += I
+        Epre += E
+        z0 = z1
     end
 
-    z0 = zeros(i1)
-    i = 1
-    ansI = T(0)
-    ansE = T(0)
-    oldansI = T(0)
+    I = T(0)
+    oldI = T(0)
     ak = T[]
     ek = T[]
     while nconvergences > 0
-        z1 = zeros(i+i1)
+        i1 += 1
+        z1 = zerosf(i1)
         I, E = quadgk(f, z0, z1; atol=atol, rtol=rtol)
         push!(ak, I)
         push!(ek, E)
-        ansI = accel_cohen_villegas_zagier(ak)
-        ansE = accel_cohen_villegas_zagier(ek)
+        z0 = z1
+        I = accel_cohen_villegas_zagier(ak)
 
-        adiff = abs(ansI - oldansI)
-        rdiff = adiff * 2 / abs(ansI + oldansI)
+        adiff = abs(I - oldI)
+        rdiff = adiff * 2 / abs(I + oldI)
         if adiff <= atol || rdiff <= rtol
             nconvergences -= 1
-            #@show i,adiff,rdiff,ansI+presum
         end
-        oldansI = ansI
-
-        z0 = z1
-        i += 1
+        oldI = I
     end
-    I = ansI + presum
-    E = Err + ansE
+    I = Ipre + I
+    E = Epre + accel_cohen_villegas_zagier(ek)
     return I, E
 end
 

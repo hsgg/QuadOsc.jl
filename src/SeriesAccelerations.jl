@@ -15,7 +15,7 @@ export accel_cohen_villegas_zagier
     accel_cohen_villegas_zagier(ak)
 
 Estimate the sum over the array `ak`. It is assumed without check that the
-elements in the array have alternating sign.
+elements in the array have alternating sign and the series converges.
 
 This algorithm is
 [presented](https://people.mpim-bonn.mpg.de/zagier/files/exp-math-9/fulltext.pdf)

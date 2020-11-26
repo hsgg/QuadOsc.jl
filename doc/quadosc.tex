@@ -1,0 +1,59 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{fullpage}
+\usepackage{mathtools}
+
+
+\begin{document}
+
+
+\section{Introduction}
+\cite{Cohen+:doi:10.1080/10586458.2000.10504632}
+
+\section{Wynn's $\epsilon$-algorithm}
+Wynn \cite{Wynn:10.2307/2002183} developed the $\epsilon$-algorithm based on
+Shanks' series. It goes as follows. Given a sequence of partial sums
+$\{s_n\}$ with $n=1,2,\ldots,N$, define
+\begin{align}
+  \epsilon_{-1}(s_n) &= 0\,, &
+  \epsilon_{0}(s_n) &= s_n\,.
+\end{align}
+Then,
+\begin{align}
+  \epsilon_{j+1}(s_n)
+  &=
+  \epsilon_{j-1}(s_{n+1})
+  + \frac{1}{\epsilon_j(s_{n+1}) - \epsilon_j(s_n)}
+\end{align}
+for $j=0,1,2,\ldots$. The $\epsilon_{2j}(s_n)$ are approximations to the
+series.
+
+The $\epsilon$-table is of the form
+\begin{align}
+  \begin{matrix}
+    %0 & s_0 & \epsilon_1(s_0) & \epsilon_2(s_0) & \epsilon_3(s_0) & \epsilon_4(s_0) & \ldots \\
+    0 & s_1 & \epsilon_1(s_1) & \epsilon_2(s_1) & \epsilon_3(s_1) & \epsilon_4(s_1) & \ldots \\
+    0 & s_2 & \epsilon_1(s_2) & \epsilon_2(s_2) & \epsilon_3(s_2) & \ldots & \ldots \\
+    0 & s_3 & \epsilon_1(s_3) & \epsilon_2(s_3) & \ldots & \ldots & \ldots \\
+    0 & s_4 & \epsilon_1(s_4) & \ldots & \ldots & \ldots & \ldots \\
+    0 & s_5 & \ldots & \ldots & \ldots & \ldots & \ldots \\
+    \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots \\
+  \end{matrix}
+\end{align}
+The best approximations are usually taken to be $\epsilon_{2j}(s_1)$ for odd
+$N$, or $\epsilon_{2j}(s_2)$ for even $N$.
+
+To implement, we need two arrays for even and add $j$. To generte the next
+$j$, we can overwrite the very first entry in the older array.
+
+
+\bibliographystyle{plain}
+\bibliography{refs/tandf_uexm209_3,refs/10.2307_2002183}
+
+
+\end{document}
+
+
+% vim: set sw=2 sts=2 et :

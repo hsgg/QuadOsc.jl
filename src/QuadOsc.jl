@@ -31,7 +31,10 @@ acceleration.
 """
 function quadosc(f::Function, a::Number, b::Number, zerosf::Function; pren=2,
 		 atol=zero(Float64), rtol=sqrt(eps(Float64)), order=7,
-		 nconvergences=ceil(Int,-1.31*log10(rtol)))
+                 #nconvergences=ceil(Int,-1.31*log10(rtol)),
+                 #accelerator=accel_cohen_villegas_zagier)
+                 nconvergences=5,
+                 accelerator=accel_wynn_eps)
     @assert b == Inf
     T = Float64
 
@@ -60,7 +63,7 @@ function quadosc(f::Function, a::Number, b::Number, zerosf::Function; pren=2,
         push!(ak, I)
         push!(ek, E)
         z0 = z1
-        I = accel_cohen_villegas_zagier(ak)
+        I = accelerator(ak)
 
         adiff = abs(I - oldI)
         rdiff = adiff * 2 / abs(I + oldI)
@@ -70,7 +73,7 @@ function quadosc(f::Function, a::Number, b::Number, zerosf::Function; pren=2,
         oldI = I
     end
     I = Ipre + I
-    E = Epre + accel_cohen_villegas_zagier(ek)
+    E = Epre + abs(accelerator(ek))
     return I, E
 end
 

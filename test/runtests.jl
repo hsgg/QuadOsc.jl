@@ -62,8 +62,34 @@ using SpecialFunctions
 		ak = @. (-1)^k / (k + 1)^s / (1 - 2^(1 - s))
 		return QuadOsc.accel_cohen_villegas_zagier(ak)
 	end
-	@test riemann_zeta(1/2) ≈ -1.4603545088
-	@test riemann_zeta(-1+im) ≈ 0.0168761517 - 0.1141564804*im
+	@test riemann_zeta(1/2) ≈ -1.4603545088 rtol=0 atol=1e-10
+	@test riemann_zeta(-1+im) ≈ 0.0168761517 - 0.1141564804*im rtol=0 atol=1e-10
+end
+
+
+@testset "SeriesAccelerations Wynn's epsilon" begin
+	# Ex 1 in Cohen et al 2000
+	# Note: we actually disagree with the answer given in the paper. What's
+	# going on? Since all other tests pass, we probably solving a different
+	# problem than them.
+	fn(n) = (-1)^(n+1) * loggamma(1 + 1 / (2*n - 1))
+	println("n an\tsum(ak)\tA")
+	for n=1:20
+		ak = @. fn(1:n)
+		lnA = QuadOsc.accel_wynn_eps(ak)
+		A = exp(lnA)
+		Adirect = exp(sum(ak))
+		println("$n $(ak[end])\t$Adirect\t$A")
+	end
+
+	# Ex 3 in Cohen et al 2000
+	riemann_zeta(s; n=20) = begin
+		k = 0:n-1
+		ak = @. (-1)^k / (k + 1)^s / (1 - 2^(1 - s))
+		return QuadOsc.accel_wynn_eps(ak)
+	end
+	@test riemann_zeta(1/2) ≈ -1.4603545088 rtol=0 atol=1e-10
+	@test riemann_zeta(-1+im) ≈ 0.0168761517 - 0.1141564804*im rtol=0 atol=1e-10
 end
 
 
@@ -76,7 +102,7 @@ function test_quadosc()
 	ak = Float64[]
 	ans = 0.0
 	correct = 0.4210244382
-	println("N\tSum(direct)\tSum(Levin)")
+	println("N\tSum(direct)\tSum(Cohen+)\tSum(Wynn)")
 	for n in 0:nterm
 		b += pi
 		s, E = quadgk(integrand, a, b)
@@ -84,7 +110,8 @@ function test_quadosc()
 		a = b
 		sum += s
 		ans = QuadOsc.accel_cohen_villegas_zagier(ak)
-		println("$n\t$sum\t$ans")
+		ans2 = QuadOsc.accel_wynn_eps(ak)
+		println("$n\t$sum\t$ans\t$ans2")
 	end
 	directans, E = quadosc(integrand, 0, Inf, n -> n * pi)
 	println("ans          = $ans")
@@ -92,6 +119,7 @@ function test_quadosc()
 	println("correct + dI = $(correct) + $(directans - correct)")
 	@test abs(ans - correct) < 1e-10
 	@test abs(ans - directans) < 1e-10
+	@test 0 <= E <= 1e-10
 end
 
 
@@ -100,6 +128,7 @@ function test2()
 	println("int sphbes0: $thisans +- $E =? $(pi/2)")
 	println("I          : $(pi/2) + $(thisans - pi/2)")
 	@test abs(thisans - pi/2) < E
+	@test 0 <= E <= 1e-10
 end
 
 
@@ -110,6 +139,7 @@ function test_int_Jν()
 		@show ℓ,I,E
 		@test I ≈ 1
 		@test abs(I - 1) <= E
+		@test 0 <= E <= 2*sqrt(eps(I))
 	end
 end
 

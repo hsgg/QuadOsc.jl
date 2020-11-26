@@ -74,7 +74,7 @@ epsilon-algorithm](https://www.ams.org/journals/mcom/1956-10-054/S0025-5718-1956
 presented in [Wynn 1956](https://www.jstor.org/stable/2002183).
 """
 function accel_wynn_eps(ak)
-    ΔN = Int(iseven(length(ak)))
+    ΔN = 1 - (length(ak) & 1)  # 1 for even length, 0 for odd
     N = length(ak) - ΔN
     ϵ = Array{eltype(ak)}(undef, 2, N)
     for n=1:N

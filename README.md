@@ -3,7 +3,8 @@
 This Julia package exports exactly one function `quadosc()` that is used to
 integrate oscillatory functions to infinity. The algorithm works by integrating
 the integrand between successive zeros using [QuadGK][1] and then summing the
-resulting alternating series with a series acceleration, [described][2] in
+resulting alternating series with a series acceleration, either using Wynn's
+epsilon algorithm from 1956 (by default) or the algorthm [described][2] in
 [Cohen et al 2000][3].
 
 Given an oscillatory function `fn(x)`,
@@ -19,6 +20,10 @@ The series acceleration is available via
 ```julia
 julia> ak = @. (-1)^(1:5) / (1:5)
 julia> sum_ak = QuadOsc.accel_cohen_villegas_zagier(ak)
+```
+or
+```julia
+julia> sum_ak = QuadOsc.accel_wynn_eps(ak)
 ```
 
 Tests can be run by loading the package, entering package mode with pressing
